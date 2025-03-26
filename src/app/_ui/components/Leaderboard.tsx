@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { quizAPI } from '../utils/apiUtils';
-import Button from './Button';
+import { Button } from './Button';
 
 interface LeaderboardProps {
   testCode: string;
@@ -25,7 +25,7 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ testCode, onClose }) => {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [testInfo, setTestInfo] = useState<{subject: string; topic: string} | null>(null);
+  const [testInfo, setTestInfo] = useState<{ subject: string; topic: string } | null>(null);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -116,15 +116,14 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ testCode, onClose }) => {
                 <tr key={entry._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center justify-center">
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                        entry.rank === 1 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : entry.rank === 2 
-                            ? 'bg-gray-200 text-gray-800' 
-                            : entry.rank === 3 
-                              ? 'bg-amber-100 text-amber-800' 
-                              : 'bg-blue-100 text-blue-800'
-                      }`}>
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${entry.rank === 1
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : entry.rank === 2
+                          ? 'bg-gray-200 text-gray-800'
+                          : entry.rank === 3
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
                         {entry.rank}
                       </span>
                     </div>
@@ -141,13 +140,12 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ testCode, onClose }) => {
                     <div className="text-sm text-gray-900">{entry.score} / {entry.totalQuestions}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      (entry.score / entry.totalQuestions) >= 0.7 
-                        ? 'bg-green-100 text-green-800' 
-                        : (entry.score / entry.totalQuestions) >= 0.4 
-                          ? 'bg-yellow-100 text-yellow-800' 
-                          : 'bg-red-100 text-red-800'
-                    }`}>
+                    <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(entry.score / entry.totalQuestions) >= 0.7
+                      ? 'bg-green-100 text-green-800'
+                      : (entry.score / entry.totalQuestions) >= 0.4
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : 'bg-red-100 text-red-800'
+                      }`}>
                       {Math.round((entry.score / entry.totalQuestions) * 100)}%
                     </div>
                   </td>
