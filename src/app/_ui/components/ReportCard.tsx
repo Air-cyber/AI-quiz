@@ -83,7 +83,7 @@ export const ReportCard = () => {
     if (history.length > 1) {
       const firstScore = (history[0].score / history[0].totalQuestions) * 100;
       const lastScore = (history[history.length - 1].score / history[history.length - 1].totalQuestions) * 100;
-      improvement = Math.round(lastScore - firstScore);
+      improvement = Math.round(firstScore - lastScore);
     }
 
     const subjectPerformance: Record<string, { total: number; count: number }> = {};
@@ -340,10 +340,10 @@ export const ReportCard = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${percentage >= 70
-                              ? 'bg-green-100 text-green-800'
-                              : percentage >= 50
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : percentage >= 50
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
                             }`}>
                             {percentage >= 70 ? (
                               <FiCheckCircle className="mr-1" />
@@ -359,12 +359,12 @@ export const ReportCard = () => {
                           {quiz.rank ? (
                             <div className="flex items-center">
                               <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${quiz.rank === 1
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : quiz.rank === 2
-                                    ? 'bg-gray-200 text-gray-800'
-                                    : quiz.rank === 3
-                                      ? 'bg-amber-100 text-amber-800'
-                                      : 'bg-blue-100 text-blue-800'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : quiz.rank === 2
+                                  ? 'bg-gray-200 text-gray-800'
+                                  : quiz.rank === 3
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-blue-100 text-blue-800'
                                 }`}>
                                 {quiz.rank}
                               </span>

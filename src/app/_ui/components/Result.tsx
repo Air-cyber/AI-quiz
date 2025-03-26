@@ -9,41 +9,45 @@ import axios from "axios";
 
 import confettiAnimation from "@/ui/assets/animations/confetti.json";
 import { DonutChart } from "./DonutChart";
-import { FaTrophy, FaChartLine, FaRedo } from "react-icons/fa"; // Removed FaHistory
+import { FaTrophy, FaChartLine, FaRedo } from "react-icons/fa";
 
-interface QuizHistoryItem {
-  quizId: string;
-  topic: string;
+interface QuizResult {
+  correctAnswers: number;
+  wrongAnswers: number;
+  secondsUsed: number;
+}
+
+interface LeaderboardEntry {
+  userId: {
+    _id: string;
+    name: string;
+  };
   score: number;
-  totalQuestions: number;
-  date: string;
+  rank: number;
 }
 
 interface ResultProps {
-  results: {
-    correctAnswers: number;
-    wrongAnswers: number;
-    secondsUsed: number;
-  };
+  results: QuizResult;
   totalQuestions: number;
   topic: string;
   testCode?: string;
+  subject: string; // Added required subject prop
 }
 
-export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps) => {
+export const Result = ({
+  results,
+  totalQuestions,
+  topic,
+  testCode,
+  subject // Added subject prop
+}: ResultProps) => {
   const { correctAnswers, wrongAnswers, secondsUsed } = results;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [resultSaved, setResultSaved] = useState(false);
   const [userRank, setUserRank] = useState<number | null>(null);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const router = useRouter();
-
-  useEffect(() => {
-    if (testCode) {
-      fetchLeaderboard();
-    }
-  }, [testCode]);
 
   const fetchLeaderboard = async () => {
     try {
@@ -62,11 +66,11 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
         }
       );
 
-      if (response.data && response.data.leaderboard) {
+      if (response.data?.leaderboard) {
         setLeaderboard(response.data.leaderboard);
         const userId = localStorage.getItem("userId");
         const userEntry = response.data.leaderboard.find(
-          (entry: any) => entry.userId._id === userId
+          (entry: LeaderboardEntry) => entry.userId._id === userId
         );
 
         if (userEntry) {
@@ -79,15 +83,23 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
   };
 
   useEffect(() => {
+    if (testCode) {
+      fetchLeaderboard();
+    }
+  }, [testCode]);
+
+  useEffect(() => {
     const saveQuizResult = async () => {
       try {
         await authAPI.saveQuizResult({
+          subject, // Added required subject
           topic,
           score: correctAnswers,
           totalQuestions,
           testCode,
           ...(userRank !== null && { rank: userRank }),
-          totalParticipants: leaderboard.length
+          totalParticipants: leaderboard.length,
+          timeTaken: secondsUsed // Added timeTaken if your API expects it
         });
         setResultSaved(true);
       } catch (err: any) {
@@ -98,8 +110,10 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
       }
     };
 
-    saveQuizResult();
-  }, [correctAnswers, totalQuestions, topic, resultSaved, testCode, userRank, leaderboard.length]);
+    if (!resultSaved) {
+      saveQuizResult();
+    }
+  }, [correctAnswers, totalQuestions, topic, testCode, userRank, leaderboard.length, secondsUsed, subject, resultSaved]);
 
   const handleRetry = () => {
     window.location.reload();
@@ -111,7 +125,7 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
 
   return (
     <motion.div
-      key={"result"}
+      key="result"
       variants={{
         initial: {
           background: "#FF6A66",
@@ -161,12 +175,12 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
               </div>
               <div className="flex items-center justify-center mt-1">
                 <span className={`inline-flex items-center justify-center w-10 h-10 rounded-full text-lg font-bold ${userRank === 1
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : userRank === 2
-                    ? 'bg-gray-200 text-gray-800'
-                    : userRank === 3
-                      ? 'bg-amber-100 text-amber-800'
-                      : 'bg-blue-100 text-blue-800'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : userRank === 2
+                      ? 'bg-gray-200 text-gray-800'
+                      : userRank === 3
+                        ? 'bg-amber-100 text-amber-800'
+                        : 'bg-blue-100 text-blue-800'
                   }`}>
                   #{userRank}
                 </span>
@@ -183,7 +197,7 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
               className="w-28 h-28"
               total={60 * totalQuestions}
               used={secondsUsed}
-              type={"time"}
+              type="time"
               data={[
                 {
                   label: "Time Used",
@@ -200,7 +214,7 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
 
             <DonutChart
               className="w-28 h-28"
-              type={"questions"}
+              type="questions"
               total={totalQuestions}
               used={correctAnswers}
               data={[
@@ -222,7 +236,7 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
         {/* Action Buttons */}
         <div className="mt-4 flex flex-col space-y-3 w-full max-w-sm mx-auto">
           <Button
-            intent={"secondary"}
+            intent="secondary"
             size="medium"
             block
             onClick={handleViewReportCard}
@@ -233,7 +247,7 @@ export const Result = ({ results, totalQuestions, topic, testCode }: ResultProps
           </Button>
 
           <Button
-            intent={"secondary"}
+            intent="secondary"
             size="medium"
             block
             onClick={handleRetry}
