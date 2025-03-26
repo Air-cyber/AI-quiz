@@ -12,7 +12,7 @@ export const Countdown = ({ onGoClick }: CountdownProps) => {
 
   return (
     <motion.div
-      key={"countdown"}
+      key="countdown"
       variants={{
         initial: {
           background: "#f4918e",
@@ -22,8 +22,19 @@ export const Countdown = ({ onGoClick }: CountdownProps) => {
           background: "#FF6A66",
           clipPath: "circle(100% at 50% 50%)",
         },
+        exit: {
+          background: "#f4918e",
+          clipPath: "circle(0% at 50% 50%)",
+        }
       }}
-      className="w-full h-full flex justify-center items-center px-5 py-8"
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '2rem 1.25rem'
+      }}
       initial="initial"
       animate="animate"
       exit="exit"
@@ -34,11 +45,23 @@ export const Countdown = ({ onGoClick }: CountdownProps) => {
         <p className="mt-[116px]">Your test starts in</p>
         <div className="flex justify-center items-center mt-[38px] rounded-full border-8 border-white w-[196px] h-[196px] bg-transparent">
           {countdown !== 0 ? (
-            <span className="text-[118px]">{countdown}</span>
+            <motion.span
+              key={`count-${countdown}`}
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              className="text-[118px]"
+            >
+              {countdown}
+            </motion.span>
           ) : (
-            <span className="text-[88px] cursor-pointer" onClick={onGoClick}>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="text-[88px] cursor-pointer bg-transparent border-none"
+              onClick={onGoClick}
+            >
               GO
-            </span>
+            </motion.button>
           )}
         </div>
       </div>
