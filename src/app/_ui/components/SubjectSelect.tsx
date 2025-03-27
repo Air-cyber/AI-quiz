@@ -36,7 +36,10 @@ const subjects = {
 
 type Subject = keyof typeof subjects;
 type Topic<S extends Subject = Subject> = keyof typeof subjects[S];
-type Chapter<S extends Subject = Subject, T extends Topic<S> = Topic<S>> = typeof subjects[S][T][number];
+type Chapter = string; // Since all your chapters are strings anyway
+
+// Then update your type guards accordingly:
+
 
 const levels = ["Easy", "Medium", "Hard"] as const;
 type Level = typeof levels[number];
@@ -61,21 +64,20 @@ function isTopic<S extends Subject>(value: any, subject: S): value is Topic<S> {
   return value in subjects[subject];
 }
 
-function isChapter<S extends Subject, T extends Topic<S>>(value: any, subject: S, topic: T): value is Chapter<S, T> {
+function isChapter(value: any, subject: Subject, topic: Topic): value is Chapter {
   const chapters = subjects[subject][topic] as readonly string[];
   return chapters.includes(value);
 }
 
 interface SubjectSelectProps {
-  onStartQuiz: <S extends Subject, L extends Level, T extends Topic<S>, C extends Chapter<S, T>>(
-    subject: S,
-    level: L,
-    topic: T,
-    chapter: C
+  onStartQuiz: (
+    subject: Subject,
+    level: Level,
+    topic: Topic,
+    chapter: string
   ) => void;
   activeTestCode?: string;
 }
-
 export const SubjectSelect = ({
   onStartQuiz,
   activeTestCode
