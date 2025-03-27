@@ -31,7 +31,7 @@ interface ResultProps {
   totalQuestions: number;
   topic: string;
   testCode?: string;
-  subject: string; // Added required subject prop
+  subject: string;
 }
 
 export const Result = ({
@@ -39,7 +39,7 @@ export const Result = ({
   totalQuestions,
   topic,
   testCode,
-  subject // Added subject prop
+  subject
 }: ResultProps) => {
   const { correctAnswers, wrongAnswers, secondsUsed } = results;
   const [loading, setLoading] = useState(true);
@@ -86,20 +86,21 @@ export const Result = ({
     if (testCode) {
       fetchLeaderboard();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [testCode]);
 
   useEffect(() => {
     const saveQuizResult = async () => {
       try {
         await authAPI.saveQuizResult({
-          subject, // Added required subject
+          subject,
           topic,
           score: correctAnswers,
           totalQuestions,
           testCode,
           ...(userRank !== null && { rank: userRank }),
           totalParticipants: leaderboard.length,
-          timeTaken: secondsUsed // Added timeTaken if your API expects it
+          timeTaken: secondsUsed
         });
         setResultSaved(true);
       } catch (err: any) {
@@ -113,7 +114,17 @@ export const Result = ({
     if (!resultSaved) {
       saveQuizResult();
     }
-  }, [correctAnswers, totalQuestions, topic, testCode, userRank, leaderboard.length, secondsUsed, subject, resultSaved]);
+  }, [
+    correctAnswers,
+    totalQuestions,
+    topic,
+    testCode,
+    userRank,
+    leaderboard.length,
+    secondsUsed,
+    subject,
+    resultSaved,
+  ]);
 
   const handleRetry = () => {
     window.location.reload();
