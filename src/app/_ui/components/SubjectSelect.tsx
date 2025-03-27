@@ -48,13 +48,37 @@ interface QuizQuestion {
   correctAnswer: string;
 }
 
+// Type guard functions
+function isSubject(value: any): value is Subject {
+  return value in subjects;
+}
+
+function isLevel(value: any): value is Level {
+  return levels.includes(value);
+}
+
+function isTopic(value: any, subject: Subject): value is Topic {
+  return value in subjects[subject];
+}
+
+function isChapter(value: any, subject: Subject, topic: Topic): value is Chapter {
+  return subjects[subject][topic].includes(value);
+}
+
+interface SubjectSelectProps {
+  onStartQuiz: (
+    subject: Subject,
+    level: Level,
+    topic: Topic,
+    chapter: Chapter
+  ) => void;
+  activeTestCode?: string;
+}
+
 export const SubjectSelect = ({
   onStartQuiz,
   activeTestCode
-}: {
-  onStartQuiz: (subject: Subject, level: Level, topic: Topic, chapter: Chapter) => void;
-  activeTestCode?: string;
-}) => {
+}: SubjectSelectProps) => {
   const [selectedSubject, setSelectedSubject] = useState<Subject | "">("");
   const [selectedTopic, setSelectedTopic] = useState<Topic | "">("");
   const [selectedChapter, setSelectedChapter] = useState<Chapter | "">("");
@@ -70,56 +94,58 @@ export const SubjectSelect = ({
     }
   }, [router]);
 
-  useEffect(() => {
-    const fetchTestInfoAndStartQuiz = async () => {
-      if (!activeTestCode) return;
+  const fetchTestInfoAndStartQuiz = async () => {
+    if (!activeTestCode) return;
 
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) return;
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-        // Fetch test information
-        const response = await axios.post(
-          "http://localhost:5000/api/quiz/generate",
-          { testCode: activeTestCode },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+      const response = await axios.post(
+        "http://localhost:5000/api/quiz/generate",
+        { testCode: activeTestCode },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
+        }
+      );
+
+      if (response.data?.testInfo) {
+        const { subject, topic, chapter, difficulty } = response.data.testInfo;
+
+        // Validate the types from the API
+        if (!isSubject(subject) || !isLevel(difficulty) ||
+          !isTopic(topic, subject) || !isChapter(chapter, subject, topic)) {
+          throw new Error("Invalid test data received from server");
+        }
+
+        const quizQuestions = await fetchQuizQuestions(
+          subject,
+          difficulty,
+          topic,
+          chapter
         );
 
-        if (response.data && response.data.testInfo) {
-          const { subject, topic, chapter, difficulty } = response.data.testInfo;
-
-          // Immediately fetch quiz questions
-          const quizQuestions = await fetchQuizQuestions(
-            subject,
-            difficulty,
-            topic,
-            chapter
-          );
-
-          if (!quizQuestions || quizQuestions.length === 0) {
-            throw new Error("No questions received from the server");
-          }
-
-          // Store questions and start quiz
-          localStorage.setItem("quizQuestions", JSON.stringify(quizQuestions));
-          onStartQuiz(subject, difficulty, topic, chapter);
+        if (!quizQuestions || quizQuestions.length === 0) {
+          throw new Error("No questions received from the server");
         }
-      } catch (error) {
-        console.error("Error fetching test info:", error);
-        // If there's an error with the test code, show the normal selection interface
-        setIsTestCodeActive(false);
-      } finally {
-        setLoading(false);
-      }
-    };
 
+        localStorage.setItem("quizQuestions", JSON.stringify(quizQuestions));
+        onStartQuiz(subject, difficulty, topic, chapter);
+      }
+    } catch (error) {
+      console.error("Error fetching test info:", error);
+      setIsTestCodeActive(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchTestInfoAndStartQuiz();
-  }, [activeTestCode, onStartQuiz]);
+  }, [activeTestCode]);
 
   useEffect(() => {
     setSelectedTopic("");
@@ -155,7 +181,6 @@ export const SubjectSelect = ({
     }
   };
 
-  // Show loading state while processing test code
   if (loading && activeTestCode) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl">
@@ -171,7 +196,6 @@ export const SubjectSelect = ({
     );
   }
 
-  // Only show the selection interface if there's no active test code
   if (!activeTestCode) {
     return (
       <motion.div
@@ -185,7 +209,6 @@ export const SubjectSelect = ({
         animate="animate"
         exit="initial"
       >
-        {/* ... rest of your existing JSX for the selection interface ... */}
         <div className="flex-1 flex flex-col mb-6">
           <div className="text-center mb-12">
             <h1 className="text-brand-primary font-bold text-4xl mb-3">
@@ -197,9 +220,7 @@ export const SubjectSelect = ({
           </div>
 
           <div className="space-y-8 max-w-4xl mx-auto w-full">
-            {/* Subject and Topic in one line */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Subject Selection Dropdown */}
               <div>
                 <label htmlFor="subject-select" className="block text-xl font-semibold text-brand-neutral-dark mb-3">
                   Subject
@@ -226,7 +247,6 @@ export const SubjectSelect = ({
                 </div>
               </div>
 
-              {/* Topic Selection Dropdown */}
               {selectedSubject && (
                 <div>
                   <label htmlFor="topic-select" className="block text-xl font-semibold text-brand-neutral-dark mb-3">
@@ -256,9 +276,7 @@ export const SubjectSelect = ({
               )}
             </div>
 
-            {/* Chapter and Difficulty in another line */}
             <div className="grid grid-cols-2 gap-4">
-              {/* Chapter Selection Dropdown */}
               {selectedSubject && selectedTopic && (
                 <div>
                   <label htmlFor="chapter-select" className="block text-xl font-semibold text-brand-neutral-dark mb-3">
@@ -287,7 +305,6 @@ export const SubjectSelect = ({
                 </div>
               )}
 
-              {/* Difficulty Selection */}
               <div>
                 <h2 className="text-xl font-semibold text-brand-neutral-dark mb-4">Difficulty</h2>
                 <div className="flex space-x-4">
@@ -326,7 +343,6 @@ export const SubjectSelect = ({
           </div>
         </div>
 
-        {/* Continue Button - Fixed at bottom */}
         <div className="sticky bottom-0 pt-6 pb-4 bg-gradient-to-t from-white to-transparent">
           <div className="max-w-4xl mx-auto w-full">
             <button
@@ -360,6 +376,5 @@ export const SubjectSelect = ({
     );
   }
 
-  // If there's an active test code but we're not loading, return null or a message
   return null;
 };
