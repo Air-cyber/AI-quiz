@@ -242,6 +242,7 @@ export const Quiz = ({
         totalQuestions={quizQuestions.length}
         topic={selectedSubject}
         testCode={testCode}
+        subject={selectedSubject} // Add this line
       />
     );
   }
